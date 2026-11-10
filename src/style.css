@@ -186,9 +186,8 @@ button.preset.active { border-color: var(--accent); background: var(--accent-sof
 /* ---- Navigation: top bar on wide screens, bottom tab bar on phones ---- */
 .nav-icon { display: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .limits-line { font-size: 0.82rem; color: var(--muted); margin: 8px 0 0; }
-.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
-.chip { font: inherit; font-size: 0.9rem; white-space: nowrap; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 10px; }
+.chip { font: inherit; font-size: 0.9rem; text-align: center; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
 .chip[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .back-row { margin: 14px 0 0; }
 details.opts { border-top: 1px solid var(--border); margin: 6px 0 10px; padding-top: 8px; }
@@ -210,6 +209,9 @@ details.opts[open] > summary { margin-bottom: 8px; }
   .mode-tabs { margin-top: 10px; }
   .mode-tab { padding: 8px 16px; }
   button.preset { padding: 10px 12px; font-size: 0.98rem; }
+  /* Four short labels in one row of equal buttons. */
+  .chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .chip { padding: 6px 2px; font-size: 0.85rem; white-space: nowrap; }
   .quick-answer { font-size: 1.4rem; }
   .asked { margin-top: 12px; font-size: 1.02rem; }
   /* Three hexagram cards side by side instead of stacked. */
@@ -222,3 +224,8 @@ details.opts[open] > summary { margin-bottom: 8px; }
   .tris .term { display: none; }
   .site-footer { padding-bottom: 8px; }
 }
+.group-name { margin: -2px 0 8px; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.number-row { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; margin: -2px 0 4px; }
+.number-row .field { margin: 0; }
+.number-row input { max-width: 140px; }
+button.primary.small { padding: 8px 18px; margin: 0; font-size: 0.95rem; }

@@ -10,13 +10,13 @@ import type { Cast } from './cast';
 import type { SourceId } from './sources';
 import { ELEMENT_ZH, type Trigram } from './trigrams';
 
-export type RelationTopic = 'lost' | 'traveller' | 'visit' | 'travel' | 'plan' | 'recognition';
-export type Topic = 'general' | 'weather' | RelationTopic;
+export type RelationTopic = 'lost' | 'traveller' | 'visit' | 'travel' | 'plan' | 'recognition' | 'marriage' | 'home' | 'dwelling' | 'meal' | 'job';
+export type Topic = 'general' | 'weather' | 'guess' | RelationTopic;
 type T = { zh: string; en: string };
 
 export type GeneralAnswer = Relation;
 export type WeatherAnswer = 'rain' | 'clear' | 'bright' | 'overcast' | 'grey' | 'windy' | 'thunder' | 'clearing' | 'changeable';
-export type AnswerKey = GeneralAnswer | WeatherAnswer | `${RelationTopic}.${Relation}`;
+export type AnswerKey = GeneralAnswer | WeatherAnswer | `${RelationTopic | 'guess'}.${Relation}`;
 
 export interface QuickAnswer {
   topic: Topic;
@@ -50,17 +50,24 @@ const BASE_LABEL: Record<GeneralAnswer | WeatherAnswer, T> = {
 export const TOPIC_LABEL: Record<Topic, T> = {
   general: { zh: '一般', en: 'General' },
   weather: { zh: '天氣', en: 'Weather' },
+  guess: { zh: '猜物', en: 'Guess the object' },
   lost: { zh: '失物', en: 'Lost item' },
   traveller: { zh: '行人', en: 'Someone away' },
   visit: { zh: '見人', en: 'Seeing someone' },
   travel: { zh: '出行', en: 'Travel' },
   plan: { zh: '計畫', en: 'A plan' },
   recognition: { zh: '功名', en: 'Recognition' },
+  marriage: { zh: '感情', en: 'Relationship' },
+  home: { zh: '家宅', en: 'Home' },
+  dwelling: { zh: '住處', en: 'A place to live' },
+  meal: { zh: '飲食', en: 'A meal' },
+  job: { zh: '換工作', en: 'Changing jobs' },
 };
 
 type Ans = { tone: Tone } & T;
 /** Each topic's five answers, softened from the book (the original wording is in the cited rule). */
-const TOPIC_ANSWERS: Record<RelationTopic, { noun: T; rule: SourceId; answers: Record<Relation, Ans> }> = {
+/** `borrowed`: not one of the book's eighteen; it uses the named rule by analogy (「以類而推」). */
+const TOPIC_ANSWERS: Record<RelationTopic, { noun: T; rule: SourceId; borrowed?: boolean; answers: Record<Relation, Ans> }> = {
   lost: {
     noun: { zh: '失物', en: 'the item' }, rule: 'lostRule',
     answers: {
@@ -121,6 +128,56 @@ const TOPIC_ANSWERS: Record<RelationTopic, { noun: T; rule: SourceId; answers: R
       keTi: { tone: 'caution', zh: '這次難以如願', en: 'Unlikely this time' },
     },
   },
+  marriage: {
+    noun: { zh: '這段感情', en: 'the relationship' }, rule: 'marriageRule',
+    answers: {
+      biHe: { tone: 'good', zh: '彼此相合，是好緣分', en: 'A good match: you suit each other' },
+      shengTi: { tone: 'good', zh: '容易有結果', en: 'Likely to come together' },
+      tiKe: { tone: 'good', zh: '能成，但會慢一些', en: 'It can work, but slowly' },
+      tiSheng: { tone: 'caution', zh: '不易有結果，你付出較多', en: 'Hard to come together; you give more than you get' },
+      keTi: { tone: 'caution', zh: '這次較難有結果，不宜勉強', en: 'Unlikely to come together this time; do not force it' },
+    },
+  },
+  home: {
+    noun: { zh: '家宅', en: 'the home' }, rule: 'homeRule',
+    answers: {
+      biHe: { tone: 'good', zh: '家中安穩', en: 'Home is settled and calm' },
+      tiKe: { tone: 'good', zh: '家中平安順利', en: 'Home life goes well' },
+      shengTi: { tone: 'good', zh: '家中有進益，或有人送禮', en: 'Gains at home, or a gift arriving' },
+      tiSheng: { tone: 'caution', zh: '開銷較多，留意門戶與財物', en: 'More outgoings; keep doors and valuables secure' },
+      keTi: { tone: 'caution', zh: '家中近來多波折，宜多留心', en: 'A bumpy time at home; pay extra attention' },
+    },
+  },
+  dwelling: {
+    noun: { zh: '住處', en: 'the place' }, rule: 'dwellingRule',
+    answers: {
+      biHe: { tone: 'good', zh: '住得安穩', en: 'A settled place to live' },
+      tiKe: { tone: 'good', zh: '住得好', en: 'Good to live in' },
+      shengTi: { tone: 'good', zh: '住進去會越來越興旺', en: 'Things look up after you move in' },
+      tiSheng: { tone: 'caution', zh: '住進去開銷會變大', en: 'Living there costs you more' },
+      keTi: { tone: 'caution', zh: '這裡不太適合，宜再考慮', en: 'Not a good fit; think it over again' },
+    },
+  },
+  meal: {
+    noun: { zh: '飲食', en: 'the meal' }, rule: 'mealRule',
+    answers: {
+      shengTi: { tone: 'good', zh: '豐盛', en: 'A generous meal' },
+      biHe: { tone: 'good', zh: '吃得豐足', en: 'Plenty to eat' },
+      tiKe: { tone: 'neutral', zh: '吃得到，但有些阻滯', en: 'You will eat, after some hold-up' },
+      tiSheng: { tone: 'neutral', zh: '不太容易吃成', en: 'Hard to arrange' },
+      keTi: { tone: 'neutral', zh: '恐怕吃不成', en: 'It may not happen' },
+    },
+  },
+  job: {
+    noun: { zh: '換工作這件事', en: 'the job change' }, rule: 'planRule', borrowed: true,
+    answers: {
+      biHe: { tone: 'good', zh: '換得如願', en: 'The change goes as you hope' },
+      shengTi: { tone: 'good', zh: '換得順利，不太費力', en: 'The change comes easily' },
+      tiKe: { tone: 'good', zh: '能換成，但較慢', en: 'It works out, but slowly' },
+      tiSheng: { tone: 'caution', zh: '要花很多心力，收效有限', en: 'Much effort for a modest result' },
+      keTi: { tone: 'caution', zh: '現在換不太順，宜再想想', en: 'Not a smooth time to change; think it over' },
+    },
+  },
 };
 
 /** 失物占: where to look, from the 變 trigram (「又以變卦為失物之所在」). */
@@ -135,7 +192,72 @@ export const LOST_PLACE: Record<number, T> = {
   8: { zh: '西南方；或田野、倉庫、儲物處、地窖，或陶瓷、方形容器裡。', en: 'South-west; or a field, a storeroom or cellar, or inside pottery or a square container.' },
 };
 
+// ---- 射覆: guess a hidden object (卷三「占物類例」「物數為體訣」「觀物趣時訣」「萬物戲驗」) ----
+
+/** What kind of thing, from 體 against 用 (「生體者，為可食之物…」). 「穢物」 is softened. */
+const GUESS_NATURE: Record<Relation, T> = {
+  shengTi: { zh: '可以吃的，或貴重的東西', en: 'Something you can eat, or something valuable' },
+  keTi: { zh: '平常、不值錢的隨身小物', en: 'An everyday, low-value thing kept close at hand' },
+  tiSheng: { zh: '還沒做好、或已經用不上的東西', en: 'Something unfinished, or no longer of use' },
+  tiKe: { zh: '破損、有缺口的東西', en: 'Something broken, chipped or damaged' },
+  biHe: { zh: '完整、好用的器物', en: 'A whole, usable object' },
+};
+/** Material, colour and shape by trigram (「萬物戲驗」, 離 also 「中虛」 from 「占物類例」). */
+const GUESS_TRIGRAM: Record<number, T> = {
+  1: { zh: '乾：圓形、白色、堅硬，像金屬或值錢的東西', en: '乾: round, white and hard, like metal or something valuable' },
+  2: { zh: '兌：有缺口、破損，或有開口的東西', en: '兌: chipped or broken, or something with an opening' },
+  3: { zh: '離：質地柔、中空，或燒過的東西（像炭）', en: '離: soft or hollow, or something burnt, like charcoal' },
+  4: { zh: '震：竹子或木頭做的東西', en: '震: something of bamboo or wood' },
+  5: { zh: '巽：竹子或木頭做的東西', en: '巽: something of bamboo or wood' },
+  6: { zh: '坎：黑色、柔軟、跟水有關的東西', en: '坎: black and soft, to do with water' },
+  7: { zh: '艮：泥土、陶瓦或石頭類，黃色', en: '艮: clay, pottery or stone, yellowish' },
+  8: { zh: '坤：從土裡來的東西，黃色，質地溫和', en: '坤: something from the earth, yellow and mild in texture' },
+};
+
+export function guess(c: Cast, a: Analysis): QuickAnswer {
+  const r = a.relations.yong;
+  const you = `${c.ti.name}${ELEMENT_ZH[c.ti.element]}`;
+  const it = `${c.yong.name}${ELEMENT_ZH[c.yong.element]}`;
+  const notes: QuickAnswer['notes'] = [];
+  // Material and colour from the 互 trigrams; the number from their 先天 numbers, two if doubled.
+  const hu = c.huTi.num === c.huYong.num ? [c.huTi] : [c.huTi, c.huYong];
+  notes.push({
+    text: { zh: `材質與顏色（互卦）：${hu.map((t) => GUESS_TRIGRAM[t.num].zh).join('；')}。`, en: `Material and colour (nuclear trigrams): ${hu.map((t) => GUESS_TRIGRAM[t.num].en).join('; ')}.` },
+    sources: ['guessHu', ...hu.map((t) => `guess${t.num}` as SourceId)],
+  });
+  const nums = [...new Set([c.huTi.num, c.huYong.num])].sort((x, y) => x - y);
+  notes.push({
+    text: hu.length === 1
+      ? { zh: `數量：兩件（互卦重${hu[0].name}）。`, en: `How many: two (the nuclear trigram ${hu[0].name} is doubled).` }
+      : { zh: `數量：${nums.join(' 或 ')} 件左右。`, en: `How many: about ${nums.join(' or ')}.` },
+    sources: ['guessHu'],
+  });
+  if (c.huTi.num === 3 || c.huYong.num === 3) notes.push({ text: { zh: '互卦見離：可能是中空的東西，甚至手裡根本沒東西。', en: '離 in the nuclear trigrams: it may be hollow, or the hand may even be empty.' }, sources: ['guessLiEmpty'] });
+  // Hard or soft from the yang and yin lines of the main hexagram.
+  const yang = c.ben.lines.filter((l) => l === 1).length;
+  if (yang !== 3) notes.push({ text: yang > 3 ? { zh: '軟硬：陽爻多，偏硬。', en: 'Hard or soft: more yang lines, so on the hard side.' } : { zh: '軟硬：陰爻多，偏軟。', en: 'Hard or soft: more yin lines, so on the soft side.' }, sources: ['guessHardSoft'] });
+  if (c.moving >= 5) notes.push({ text: { zh: '動爻在第五、六爻：多半是會動、會飛的東西。', en: 'The moving line is the fifth or sixth: often something that can move or fly.' }, sources: ['guessFlying'] });
+  // Season hints from the main hexagram's trigrams (「觀物趣時訣」).
+  const has = (n: string) => c.ben.upper.name === n || c.ben.lower.name === n;
+  const seasonal: T | null =
+    a.season === 'spring' && (has('震') || has('離')) ? { zh: '春天見震或離：可能是花。', en: 'Spring with 震 or 離: perhaps a flower.' }
+    : a.season === 'summer' && has('震') ? { zh: '夏天見震：可能是會發出聲音的東西。', en: 'Summer with 震: perhaps something that makes a sound.' }
+    : a.season === 'autumn' && has('兌') ? { zh: '秋天見兌：可能是有破損的器物。', en: 'Autumn with 兌: perhaps a damaged utensil.' }
+    : a.season === 'winter' && has('坤') ? { zh: '冬天見坤：可能是沒什麼用的土石之物。', en: 'Winter with 坤: perhaps some useless bit of earth or stone.' }
+    : null;
+  if (seasonal) notes.push({ text: seasonal, sources: ['guessSeason'] });
+  // The moving line's text, as the book reads 「潛龍勿用」 as an unusable thing.
+  const line = c.ben.text.lines[c.moving - 1];
+  notes.push({ text: { zh: `爻辭線索：${c.ben.text.name}${line.label}「${line.text}」`, en: `Line-text clue: ${c.ben.text.name} ${line.label} 「${line.text}」` }, sources: ['guessLineText'] });
+  return {
+    topic: 'guess', key: `guess.${r}`, tone: 'neutral', label: GUESS_NATURE[r],
+    reason: relationReason(r, you, it, { zh: '所藏之物', en: 'the hidden object' }), notes,
+    sources: ['guessTiYong', 'guessExample1', 'guessExample2'],
+  };
+}
+
 export const ANSWER_LABEL: Record<string, T> = { ...BASE_LABEL };
+for (const [rel, t] of Object.entries(GUESS_NATURE)) ANSWER_LABEL[`guess.${rel}`] = t;
 for (const [topic, d] of Object.entries(TOPIC_ANSWERS)) {
   for (const [rel, a] of Object.entries(d.answers)) ANSWER_LABEL[`${topic}.${rel}`] = { zh: a.zh, en: a.en };
 }
@@ -159,6 +281,22 @@ function byTopic(topic: RelationTopic, c: Cast, a: Analysis): QuickAnswer {
   const you = `${c.ti.name}${ELEMENT_ZH[c.ti.element]}`;
   const it = `${c.yong.name}${ELEMENT_ZH[c.yong.element]}`;
   const notes: QuickAnswer['notes'] = [];
+  if (topic === 'meal') {
+    // 「卦中有坎則有酒，有兌則有食。無坎無兌，則皆無。」
+    const names = weatherTrigrams(c).map((t) => t.name);
+    const kan = names.includes('坎'), dui = names.includes('兌');
+    const text: T = kan && dui ? { zh: '卦中有坎有兌：有酒也有好菜。', en: '坎 and 兌 both appear: drinks and good food.' }
+      : kan ? { zh: '卦中有坎：席上有酒。', en: '坎 appears: there will be drinks.' }
+      : dui ? { zh: '卦中有兌：有好吃的。', en: '兌 appears: there will be good food.' }
+      : { zh: '卦中無坎無兌：傳統上主酒菜都不多。', en: 'No 坎 or 兌: traditionally, not much to eat or drink.' };
+    notes.push({ text, sources: ['mealKanDui'] });
+  }
+  if (d.borrowed) {
+    notes.push({
+      text: { zh: '書中沒有這一類，依「以類而推」借用「求謀占」的規則。這是重大決定：以上只是傳統占法的看法，請依實際情況衡量。', en: 'The book has no such category, so this borrows its rule for plans, as the book allows. It is a big decision: this is only the tradition\'s reading, so weigh it on its real merits.' },
+      sources: ['byAnalogy'],
+    });
+  }
   if (topic === 'lost') {
     const b = c.bianTrigram;
     notes.push({
@@ -240,5 +378,6 @@ export function weather(c: Cast, season: Season): QuickAnswer {
 export function quickAnswer(topic: Topic, c: Cast, a: Analysis): QuickAnswer {
   if (topic === 'weather') return weather(c, a.season);
   if (topic === 'general') return general(c, a);
+  if (topic === 'guess') return guess(c, a);
   return byTopic(topic, c, a);
 }

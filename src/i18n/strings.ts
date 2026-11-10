@@ -209,6 +209,9 @@ export const STR = {
   optionsTitle: { zh: '時間與加數', en: 'Time and extra number' },
   optionsNone: { zh: '無', en: 'none' },
   howItWorks: { zh: '這是怎麼算的？', en: 'How does this work?' },
+  guessNumber: { zh: '先隨意想一個數字', en: 'First, think of any number' },
+  guessHint: { zh: '每猜一次換一個數字，就會得到新的卦。', en: 'Pick a new number for each round to get a new cast.' },
+  guessReveal: { zh: '看看猜得對不對：請朋友打開手！', en: 'Now ask your friend to open their hand!' },
 } as const satisfies Record<string, { zh: string; en: string }>;
 
 export type StrKey = keyof typeof STR;

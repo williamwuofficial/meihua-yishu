@@ -68,8 +68,8 @@ describe('weather quick answer (天時占: count trigrams, no 體用)', () => {
   });
 });
 
-describe('topic answers (卷二 失物、行人、謁見、出行、求謀、求名)', () => {
-  const topics = ['lost', 'traveller', 'visit', 'travel', 'plan', 'recognition'] as const;
+describe('topic answers (卷二 失物、行人、謁見、出行、求謀、求名、婚姻、家宅、屋舍、飲食; job by analogy)', () => {
+  const topics = ['lost', 'traveller', 'visit', 'travel', 'plan', 'recognition', 'marriage', 'home', 'dwelling', 'meal', 'job'] as const;
   const casts: ReturnType<typeof cast>[] = [];
   for (let u = 1; u <= 8; u++) for (let l = 1; l <= 8; l++) for (let m = 1; m <= 6; m++) casts.push(cast(u, l, m));
 
@@ -122,5 +122,61 @@ describe('quick-mode presets', async () => {
   it('counts characters only, not punctuation', () => {
     expect(charCount('今天會下雨嗎？')).toBe(6);
     expect(charCount('這次的考試、應徵或升遷有希望嗎？')).toBe(14);
+  });
+});
+
+describe('飲食 and the borrowed job question', () => {
+  it('飲食: 「有坎則有酒，有兌則有食。無坎無兌，則皆無」', () => {
+    // 兌為澤 (2/2) line 1 → 澤水困: 兌, 兌, 互 巽/離, 兌, 坎 → both 坎 and 兌.
+    const both = cast(2, 2, 1);
+    expect(quickAnswer('meal', both, analyse(both, 'spring')).notes[0].text.en).toMatch(/both appear/);
+    // 乾為天 line 1 → 天風姤: no 坎, no 兌.
+    const none = cast(1, 1, 1);
+    expect(quickAnswer('meal', none, analyse(none, 'spring')).notes[0].text.en).toMatch(/^No 坎 or 兌/);
+  });
+  it('the job question says it borrows 求謀 and flags a big decision', () => {
+    const c = cast(34, 43, 43);
+    const q = quickAnswer('job', c, analyse(c, 'earth'));
+    expect(q.sources).toContain('planRule');
+    const note = q.notes.find((n) => n.sources.includes('byAnalogy'));
+    expect(note?.text.zh).toContain('重大決定');
+  });
+});
+
+describe('射覆: guessing a hidden object (卷三)', () => {
+  it('觀物用易例 1: 地天泰之初變升，互見震、兌 → grass with roots (wood, line text 「拔茅茹」)', () => {
+    const c = cast(8, 1, 1);
+    expect(c.ben.fullName).toBe('地天泰');
+    expect(c.bian.fullName).toBe('地風升');
+    expect([c.hu.upper.name, c.hu.lower.name].sort()).toEqual(['兌', '震'].sort());
+    const q = quickAnswer('guess', c, analyse(c, 'spring'));
+    const all = q.notes.map((n) => n.text.zh).join('\n');
+    expect(all).toContain('竹子或木頭'); // 震
+    expect(all).toContain('拔茅茹');
+  });
+  it('觀物用易例 2: 火風鼎之雷風恒，互見乾、兌 → round, white, chipped; one or two', () => {
+    const c = cast(3, 5, 6);
+    expect(c.ben.fullName).toBe('火風鼎');
+    expect(c.bian.fullName).toBe('雷風恆'.replace('恆', '恒'));
+    const q = quickAnswer('guess', c, analyse(c, 'autumn'));
+    const all = q.notes.map((n) => n.text.zh).join('\n');
+    expect(all).toContain('圓形、白色、堅硬'); // 乾: 「圓」「白」
+    expect(all).toContain('有缺口、破損'); // 兌: 「毀缺」
+    expect(all).toContain('數量：1 或 2 件'); // 「互見乾、兌，決為一二之數」
+    expect(all).toContain('鼎玉鉉');
+  });
+  it('a doubled 互 gives two items (「重乾…皆是兩件」)', () => {
+    const c = cast(1, 5, 4); // 天風姤: 互 重乾
+    expect(quickAnswer('guess', c, analyse(c, 'spring')).notes.map((n) => n.text.zh).join()).toContain('兩件');
+  });
+  it('every cast gives a nature, a material and a count, with known sources and no harsh words', () => {
+    for (let u = 1; u <= 8; u++) for (let l = 1; l <= 8; l++) for (let m = 1; m <= 6; m++) {
+      const c = cast(u, l, m);
+      const q = quickAnswer('guess', c, analyse(c, 'summer'));
+      expect(ANSWER_LABEL[q.key]).toEqual(q.label);
+      expect(q.notes.length).toBeGreaterThanOrEqual(3);
+      for (const id of [...q.sources, ...q.notes.flatMap((n) => n.sources)]) expect(SOURCES[id], id).toBeDefined();
+      expect(q.label.zh).not.toMatch(/穢/);
+    }
   });
 });

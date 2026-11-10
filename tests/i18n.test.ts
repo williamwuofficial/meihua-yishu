@@ -29,3 +29,13 @@ describe('Simplified map', () => {
     }
   });
 });
+
+describe('toSimplified', async () => {
+  const { toSimplified } = await import('../src/i18n/lang');
+  it('converts words the character map would get wrong', () => {
+    expect(toSimplified('這個計畫能成嗎')).toBe('这个计划能成吗');
+    expect(toSimplified('筆畫')).toBe('笔画');
+    expect(toSimplified('應徵或升遷')).toBe('应征或升迁');
+    expect(toSimplified('乾為天')).toBe('乾为天');
+  });
+});

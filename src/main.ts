@@ -22,6 +22,8 @@ interface State {
   mode: Mode;
   /** Quick mode: the chosen preset question. */
   presetId: string | null;
+  /** Quick mode: a preset waiting for its number (the guessing game). */
+  pendingPreset: string | null;
   /** Quick mode: which group of questions is showing. */
   group: Group;
   /** Advanced mode: whether the time / extra-number section is open. */
@@ -51,7 +53,7 @@ const nowLocal = () => {
 let savedMode: Mode = 'quick';
 try { if (localStorage.getItem('meihua.mode') === 'advanced') savedMode = 'advanced'; } catch { /* storage blocked */ }
 
-const state: State = { mode: savedMode, presetId: null, group: 'everyday', optsOpen: false, question: '', topic: 'general', method: 'time', count: 2, when: nowLocal(), a: '', b: '', extra: '', addHour: settings.addHour, result: null, savedId: null, error: '' };
+const state: State = { mode: savedMode, presetId: null, pendingPreset: null, group: 'everyday', optsOpen: false, question: '', topic: 'general', method: 'time', count: 2, when: nowLocal(), a: '', b: '', extra: '', addHour: settings.addHour, result: null, savedId: null, error: '' };
 
 const posInt = (s: string) => { const n = Number(s); return s.trim() !== '' && Number.isInteger(n) && n >= 1 ? n : undefined; };
 
@@ -105,9 +107,20 @@ function doCast() {
 function castPreset(id: string) {
   const p = preset(id);
   if (!p) return;
+  if (p.needsNumber) { state.pendingPreset = state.pendingPreset === id ? null : id; render(); document.getElementById('guess-n')?.focus(); return; }
   // The question's character count is added to the time numbers (卷二「起卦加數例」), so different questions
   // asked in the same 時辰 get different hexagrams.
   Object.assign(state, { presetId: p.id, group: p.group, question: p.zh, topic: p.topic, method: 'time', when: nowLocal(), extra: String(charCount(p.zh)) });
+  doCast();
+}
+
+/** Guessing game: one number plus the hour (卷一「物數占例」). */
+function castPresetNumber(id: string, raw: string) {
+  const p = preset(id);
+  const n = posInt(raw);
+  if (!p) return;
+  if (n === undefined) { state.error = 'badNumbers'; return render(); }
+  Object.assign(state, { presetId: p.id, pendingPreset: null, group: p.group, question: p.zh, topic: p.topic, method: 'numbers', count: 1, a: String(n), b: '', when: nowLocal(), extra: '' });
   doCast();
 }
 
@@ -256,6 +269,7 @@ function quickHtml(r: CastResult): string {
     + (notes ? `<ul class="quick-notes">${notes}</ul>` : '')
     + cite(q.sources)
     + (q.topic === 'weather' ? `<p class="hint">${t('forecastNote')}</p>` : '')
+    + (q.topic === 'guess' ? `<p class="hint"><strong>${t('guessReveal')}</strong></p>` : '')
     + limitsLink()
     + `</section>`;
 }
@@ -346,12 +360,22 @@ function quickModeHtml(): string {
   const now = new Date();
   const m = lunarMoment(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), settings.ziNextDay);
   const lunar = `${zh(m.yearGanZhi)}${zh('年')} ${m.leap ? t('leap') : ''}${m.month}${zh('月')} ${m.day}${zh('日')} ${zh(m.hourBranch)}${zh('時')}`;
-  const chips = GROUPS.map((g) => `<button type="button" class="chip" data-group="${g.id}" aria-pressed="${state.group === g.id}">${esc(pick(g))}</button>`).join('');
+  const chips = GROUPS.map((g) => `<button type="button" class="chip" data-group="${g.id}" aria-pressed="${state.group === g.id}" title="${esc(pick(g))}">${esc(pick(g.short))}</button>`).join('');
+  const current = GROUPS.find((g) => g.id === state.group)!;
   const list = PRESETS.filter((p) => p.group === state.group).map((p) =>
-    `<button type="button" class="preset" data-preset="${p.id}">${esc(pick(p))}</button>`).join('');
+    `<button type="button" class="preset" data-preset="${p.id}" aria-expanded="${p.needsNumber ? state.pendingPreset === p.id : ''}">${esc(pick(p))}</button>`
+    + (p.needsNumber && state.pendingPreset === p.id ? `<form class="number-row" data-number-for="${p.id}" novalidate>
+        <label class="field"><span class="label">${t('guessNumber')}</span>
+          <span class="inline"><input type="number" id="guess-n" min="1" step="1" inputmode="numeric" value="${esc(state.a)}">
+          <button type="submit" class="primary small">${t('cast')}</button></span></label>
+        <span class="hint">${t('guessHint')}</span>
+        ${state.error === 'badNumbers' ? `<p class="error" role="alert">${t('badNumbers')}</p>` : ''}
+      </form>` : '')).join('');
   return `<section class="card quick-mode"><h2>${t('pickQuestion')}</h2>`
     + `<p class="hint">${t('quickIntro')} <strong lang="zh-Hant">${esc(lunar)}</strong></p>`
-    + `<div class="chips" role="group">${chips}</div><div class="presets">${list}</div>`
+    + `<div class="chips" role="group">${chips}</div>`
+    + (pick(current) !== pick(current.short) ? `<p class="group-name">${esc(pick(current))}</p>` : '')
+    + `<div class="presets">${list}</div>`
     + `<details class="more"><summary>${t('howItWorks')}</summary><p class="hint">${t('quickRuleNote')} ${t('charCountNote')}</p>${cite(['addNumber'])}</details>`
     + `</section>`;
 }
@@ -376,7 +400,13 @@ const render = mount('cast', 'title', () => tabsHtml() + (state.mode === 'quick'
 onBeforeLangChange(readForm);
 
 document.addEventListener('submit', (e) => {
-  if ((e.target as HTMLElement).id !== 'cast-form') return;
+  const f = e.target as HTMLFormElement;
+  if (f.dataset.numberFor) {
+    e.preventDefault();
+    castPresetNumber(f.dataset.numberFor, (document.getElementById('guess-n') as HTMLInputElement).value);
+    return;
+  }
+  if (f.id !== 'cast-form') return;
   e.preventDefault();
   readForm();
   doCast();
@@ -393,8 +423,8 @@ document.addEventListener('click', (e) => {
   if (!el) return;
   if (el.id === 'now') { readForm(); state.when = nowLocal(); render(); }
   else if (el.dataset.preset) castPreset(el.dataset.preset);
-  else if (el.dataset.group) { state.group = el.dataset.group as Group; render(); }
-  else if (el.id === 'change-q') { Object.assign(state, { result: null, savedId: null, presetId: null }); render(); window.scrollTo({ top: 0 }); }
+  else if (el.dataset.group) { state.group = el.dataset.group as Group; state.pendingPreset = null; render(); }
+  else if (el.id === 'change-q') { Object.assign(state, { result: null, savedId: null, presetId: null, pendingPreset: null, error: '' }); render(); window.scrollTo({ top: 0 }); }
   else if (el.dataset.mode) {
     readForm();
     const mode = el.dataset.mode === 'advanced' ? 'advanced' : 'quick';
