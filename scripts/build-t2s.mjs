@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import * as OpenCC from 'opencc-js';
 
 const root = new URL('..', import.meta.url).pathname;
-const files = [join(root, 'index.html')];
+const files = ['index.html', 'learn.html', 'about.html', 'settings.html', 'history.html'].map((f) => join(root, f));
 const walk = (d) => {
   for (const f of readdirSync(d)) {
     const p = join(d, f);

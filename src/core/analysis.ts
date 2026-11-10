@@ -11,8 +11,11 @@ export type Tone = 'good' | 'caution' | 'neutral';
 export interface Statement {
   id: string;
   tone: Tone;
+  /** Plain-language text, the part a newcomer reads. */
   zh: string;
   en: string;
+  /** The classical term behind it, shown as a small tag (e.g. 用克體). */
+  term?: { zh: string; en: string };
   sources: SourceId[];
 }
 
@@ -51,6 +54,13 @@ export function seasonOfMonth(month: number): Season {
   return 'winter';
 }
 
+/** Season of a month branch (月建 by solar term): 寅卯 spring, 巳午 summer, 申酉 autumn, 亥子 winter, 辰未戌丑 earth. */
+export function seasonOfBranch(b: string): Season {
+  const i = '寅卯辰巳午未申酉戌亥子丑'.indexOf(b);
+  if (i < 0) throw new RangeError(`not a branch: ${b}`);
+  return seasonOfMonth(i + 1);
+}
+
 /** 《五行大義》「論四時休王」; the 六月 row is used for every earth month, as 梅花 puts 土旺 in all four. */
 const STRENGTH: Record<Season, Record<Element, Strength>> = {
   spring: { wood: '旺', fire: '相', water: '休', metal: '囚', earth: '死' },
@@ -82,67 +92,72 @@ export const STRENGTH_EN: Record<Strength, string> = {
 
 // ---- Per-trigram images when a trigram supports / presses on 體 ----
 
-const SHENG_IMAGE: Record<number, { zh: string; en: string }> = {
-  1: { zh: '乾生體：傳統取象為公務、名位、長輩或貴人方面的助益。', en: '乾 supports 體: traditionally help through official matters, standing, elders or patrons.' },
-  2: { zh: '兌生體：傳統取象為西方之利、喜悅之事、朋友往來。', en: '兌 supports 體: traditionally gain from the west, glad news, friends and conversation.' },
-  3: { zh: '離生體：傳統取象為南方之利、文書方面的喜訊。', en: '離 supports 體: traditionally gain from the south and good news in documents or papers.' },
-  4: { zh: '震生體：傳統取象為東方之利、行動中得到好處。', en: '震 supports 體: traditionally gain from the east and good come from taking action.' },
-  5: { zh: '巽生體：傳統取象為東南方之利、山林草木相關的收益。', en: '巽 supports 體: traditionally gain from the south-east, or from trade in wood, tea and produce.' },
-  6: { zh: '坎生體：傳統取象為北方之喜、北方而來的收益。', en: '坎 supports 體: traditionally welcome news or gain from the north.' },
-  7: { zh: '艮生體：傳統取象為東北方之利、田土之喜，事情穩定有始有終。', en: '艮 supports 體: traditionally gain from the north-east or land; matters stay steady and see their end.' },
-  8: { zh: '坤生體：傳統取象為田土、鄉里、布帛穀物方面的收益。', en: '坤 supports 體: traditionally gain through land, neighbours, cloth or grain.' },
+type T = { zh: string; en: string };
+const SHENG_IMAGE: Record<number, T> = {
+  1: { zh: '帶來助力的是乾卦：傳統上象徵來自公務、名聲地位、長輩或貴人的幫助。', en: 'The helping trigram is 乾: traditionally help from official matters, standing, elders or patrons.' },
+  2: { zh: '帶來助力的是兌卦：傳統上象徵喜悅的消息、朋友往來，或來自西方的好處。', en: 'The helping trigram is 兌: traditionally glad news, friends and good conversation, or gain from the west.' },
+  3: { zh: '帶來助力的是離卦：傳統上象徵文件、證書方面的好消息，或來自南方的好處。', en: 'The helping trigram is 離: traditionally good news about documents or papers, or gain from the south.' },
+  4: { zh: '帶來助力的是震卦：傳統上象徵主動出擊會有收穫，或來自東方的好處。', en: 'The helping trigram is 震: traditionally taking action pays off, or gain from the east.' },
+  5: { zh: '帶來助力的是巽卦：傳統上象徵與草木、農產相關的收益，或來自東南方的好處。', en: 'The helping trigram is 巽: traditionally gain tied to wood, tea and produce, or from the south-east.' },
+  6: { zh: '帶來助力的是坎卦：傳統上象徵來自北方的好消息或收益。', en: 'The helping trigram is 坎: traditionally welcome news or gain from the north.' },
+  7: { zh: '帶來助力的是艮卦：傳統上象徵穩定、有始有終，或與土地、東北方相關的好處。', en: 'The helping trigram is 艮: traditionally steadiness and seeing things through, or gain from land or the north-east.' },
+  8: { zh: '帶來助力的是坤卦：傳統上象徵與土地、鄰里或日常物資相關的收益。', en: 'The helping trigram is 坤: traditionally gain through land, neighbours or everyday goods.' },
 };
-const KE_IMAGE: Record<number, { zh: string; en: string }> = {
-  1: { zh: '乾克體：傳統取象為公事或家門方面的煩惱、財物上的損耗，宜謹慎對待長輩與上司。', en: '乾 presses on 體: traditionally worries over official or household matters and loss of valuables; tread carefully with elders and superiors.' },
-  2: { zh: '兌克體：傳統取象為口舌爭執，西方之事不利，宜少爭辯。', en: '兌 presses on 體: traditionally quarrels and disputes, and matters to the west go less well; argue less.' },
-  3: { zh: '離克體：傳統取象為文書上的煩惱，並宜留意用火安全。', en: '離 presses on 體: traditionally trouble with documents; also take care with fire.' },
-  4: { zh: '震克體：傳統取象為虛驚與不安，身心難以安靜。', en: '震 presses on 體: traditionally false alarms and unease; hard to settle body and mind.' },
-  5: { zh: '巽克體：傳統取象為他人掣肘、山林草木相關之憂。', en: '巽 presses on 體: traditionally others hold you back, or worries tied to wood and growing things.' },
-  6: { zh: '坎克體：傳統取象為險阻與財物損失之憂，宜多留意安全。', en: '坎 presses on 體: traditionally hazards and risk of loss; take extra care over safety.' },
-  7: { zh: '艮克體：傳統取象為諸事多阻、計畫中途受阻。', en: '艮 presses on 體: traditionally many obstacles; plans stall part-way.' },
-  8: { zh: '坤克體：傳統取象為田土方面的煩惱或損失，宜防小人。', en: '坤 presses on 體: traditionally worries or losses over land or property; be wary of petty people.' },
+const KE_IMAGE: Record<number, T> = {
+  1: { zh: '帶來壓力的是乾卦：傳統上提醒留意公事或家中事務的煩惱、財物損耗，與長輩、上司相處宜謹慎。', en: 'The pressing trigram is 乾: traditionally worries over official or household matters and loss of valuables; tread carefully with elders and superiors.' },
+  2: { zh: '帶來壓力的是兌卦：傳統上提醒留意口角爭執，少爭辯為宜。', en: 'The pressing trigram is 兌: traditionally quarrels and disputes; argue less.' },
+  3: { zh: '帶來壓力的是離卦：傳統上提醒留意文件方面的麻煩，也要注意用火安全。', en: 'The pressing trigram is 離: traditionally trouble with documents; also take care with fire.' },
+  4: { zh: '帶來壓力的是震卦：傳統上提醒容易虛驚、心神不寧，宜讓自己靜下來。', en: 'The pressing trigram is 震: traditionally false alarms and unease; give yourself time to settle.' },
+  5: { zh: '帶來壓力的是巽卦：傳統上提醒可能受他人牽制。', en: 'The pressing trigram is 巽: traditionally others may hold you back.' },
+  6: { zh: '帶來壓力的是坎卦：傳統上提醒留意風險與財物損失，多注意安全。', en: 'The pressing trigram is 坎: traditionally hazards and risk of loss; take extra care over safety.' },
+  7: { zh: '帶來壓力的是艮卦：傳統上提醒事情容易卡住、計畫中途受阻。', en: 'The pressing trigram is 艮: traditionally things get stuck and plans stall part-way.' },
+  8: { zh: '帶來壓力的是坤卦：傳統上提醒留意財產方面的煩惱，並提防小人。', en: 'The pressing trigram is 坤: traditionally worries over property; be wary of petty people.' },
 };
 
 // ---- Relation statements ----
 
-const YONG_TEXT: Record<Relation, { tone: Tone; zh: string; en: string; src: SourceId }> = {
-  tiKe: { tone: 'good', src: 'tiKeYong', zh: '體克用：你能掌握此事，傳統視為順利之象。', en: '體 masters 用: you have the upper hand in this matter; tradition reads it as going well.' },
-  shengTi: { tone: 'good', src: 'yongShengTi', zh: '用生體：事情對你有所助益，傳統視為有進益之喜。', en: '用 supports 體: the matter feeds you; tradition reads it as gain and progress.' },
-  biHe: { tone: 'good', src: 'biHe', zh: '體用比和：你與此事同氣相合，傳統視為諸事順遂。', en: '體 and 用 share an element: you and the matter are in step; tradition reads it as things going smoothly.' },
-  tiSheng: { tone: 'caution', src: 'tiShengYong', zh: '體生用：你為此事付出較多，傳統視為有耗損之慮，宜量力而行。', en: '體 feeds 用: the matter draws on you; tradition warns of drain or expense, so pace yourself.' },
-  keTi: { tone: 'caution', src: 'yongKeTi', zh: '用克體：此事對你形成壓力，傳統視為阻力較大，宜審慎行事、多作準備。', en: '用 presses on 體: the matter weighs on you; tradition reads strong resistance, so move carefully and prepare well.' },
+/** The classical name of each relation between 體 and another trigram. */
+const TERM: Record<Relation, T> = {
+  tiKe: { zh: '體克用', en: '體克用 · you master the matter' },
+  shengTi: { zh: '用生體', en: '用生體 · the matter feeds you' },
+  biHe: { zh: '體用比和', en: '體用比和 · same element' },
+  tiSheng: { zh: '體生用', en: '體生用 · you feed the matter' },
+  keTi: { zh: '用克體', en: '用克體 · the matter presses on you' },
 };
 
-/** Relation wording when the subject is the other trigram: 「互艮為體所克」. */
-const STAGE_LABEL: Record<Relation, { zh: string; en: string }> = {
-  biHe: { zh: '與體比和', en: 'shares 體\'s element' },
-  shengTi: { zh: '生體', en: 'supports 體' },
-  keTi: { zh: '克體', en: 'presses on 體' },
-  tiSheng: { zh: '為體所生', en: 'is fed by 體' },
-  tiKe: { zh: '為體所克', en: 'is mastered by 體' },
+const YONG_TEXT: Record<Relation, { tone: Tone; zh: string; en: string; src: SourceId }> = {
+  tiKe: { tone: 'good', src: 'tiKeYong', zh: '你能掌握這件事，傳統上視為順利。', en: 'You have the upper hand in this matter; tradition reads it as going well.' },
+  shengTi: { tone: 'good', src: 'yongShengTi', zh: '這件事對你有幫助，傳統上視為會有收穫、有進展。', en: 'The matter works in your favour; tradition reads it as gain and progress.' },
+  biHe: { tone: 'good', src: 'biHe', zh: '你和這件事步調一致，傳統上視為諸事順遂。', en: 'You and the matter are in step; tradition reads it as things going smoothly.' },
+  tiSheng: { tone: 'caution', src: 'tiShengYong', zh: '這件事需要你付出不少心力或花費，宜量力而行。', en: 'The matter draws on your energy or money, so pace yourself.' },
+  keTi: { tone: 'caution', src: 'yongKeTi', zh: '這件事會帶給你壓力，阻力較大，宜審慎行事、多作準備。', en: 'The matter puts pressure on you and meets resistance, so move carefully and prepare well.' },
+};
+
+/** Short plain phrases for each relation, used in stage lines and the summary. */
+const PHRASE: Record<Relation, T> = {
+  shengTi: { zh: '形勢對你有利', en: 'things work in your favour' },
+  biHe: { zh: '你與事情步調一致，平穩', en: 'you and the matter stay in step' },
+  tiKe: { zh: '你掌握得住', en: 'you keep things under control' },
+  tiSheng: { zh: '需要你多付出心力', en: 'it asks a lot of your energy' },
+  keTi: { zh: '會有壓力，宜預作準備', en: 'there is pressure, so prepare ahead' },
 };
 
 const isGood = (r: Relation) => r === 'tiKe' || r === 'shengTi' || r === 'biHe';
+const toneOf = (r: Relation): Tone => (isGood(r) ? 'good' : r === 'tiSheng' ? 'neutral' : 'caution');
 
 function stageText(stage: 'huTi' | 'huYong' | 'bian', t: Trigram, r: Relation): Statement {
   const name = { huTi: '體互', huYong: '用互', bian: '變卦' }[stage];
-  const en = { huTi: 'The 互 on the 體 side', huYong: 'The 互 on the 用 side', bian: 'The 變 trigram' }[stage];
-  const when = stage === 'bian' ? { zh: '事情的結局', en: 'how the matter ends' } : { zh: '事情的中段', en: 'the middle of the matter' };
-  const lab = STAGE_LABEL[r];
-  const verdict: Record<Relation, { zh: string; en: string }> = {
-    shengTi: { zh: '有助於你', en: 'is in your favour' },
-    biHe: { zh: '與你同氣，平穩', en: 'is in step with you and steady' },
-    tiKe: { zh: '你能掌握', en: 'stays within your control' },
-    tiSheng: { zh: '需要你多付出', en: 'asks more of you' },
-    keTi: { zh: '對你形成壓力，宜預作準備', en: 'presses on you, so prepare ahead' },
-  };
+  const when = stage === 'bian'
+    ? { zh: '到最後', en: 'By the end' }
+    : stage === 'huTi' ? { zh: '過程中', en: 'Along the way' } : { zh: '過程中另一面', en: 'Along the way, on the other side' };
   const sources: SourceId[] = ['stages', stage === 'bian' ? 'order' : 'huTiFirst'];
   if (stage === 'bian') sources.push(r === 'keTi' ? 'bianKeTi' : r === 'shengTi' || r === 'biHe' ? 'bianShengTi' : 'order');
   return {
     id: `stage-${stage}`,
-    tone: isGood(r) ? 'good' : r === 'tiSheng' ? 'neutral' : 'caution',
-    zh: `${name}${t.name}（${ELEMENT_ZH[t.element]}）${lab.zh}，${when.zh}${verdict[r].zh}。`,
-    en: `${en}, ${t.name} (${ELEMENT_ZH[t.element]}), ${lab.en}: ${when.en} ${verdict[r].en}.`,
+    tone: toneOf(r),
+    zh: `${when.zh}，${PHRASE[r].zh}。`,
+    en: `${when.en}, ${PHRASE[r].en}.`,
+    term: { zh: `${name} ${t.name}${ELEMENT_ZH[t.element]} · ${RELATION_LABEL[r].zh}`, en: `${name} ${t.name}${ELEMENT_ZH[t.element]} · ${RELATION_LABEL[r].en}` },
     sources: [...new Set(sources)],
   };
 }
@@ -153,11 +168,12 @@ export interface Analysis {
   strengths: { ti: Strength; yong: Strength; huTi: Strength; huYong: Strength; bian: Strength };
   shengCount: number;
   keCount: number;
+  /** Three or four plain sentences: start, middle, end, overall. Each cites the rules it rests on. */
+  summary: Statement[];
   statements: Statement[];
 }
 
-export function analyse(c: Cast, lunarMonth: number): Analysis {
-  const season = seasonOfMonth(lunarMonth);
+export function analyse(c: Cast, season: Season): Analysis {
   const te = c.ti.element;
   const relations = {
     yong: relationToTi(te, c.yong.element),
@@ -171,20 +187,21 @@ export function analyse(c: Cast, lunarMonth: number): Analysis {
 
   // 1. 用 against 體.
   const y = YONG_TEXT[relations.yong];
-  out.push({ id: 'yong', tone: y.tone, zh: y.zh, en: y.en, sources: relations.yong === 'tiSheng' ? [y.src, 'tiShengLeak'] : [y.src] });
+  out.push({ id: 'yong', tone: y.tone, zh: y.zh, en: y.en, term: TERM[relations.yong], sources: relations.yong === 'tiSheng' ? [y.src, 'tiShengLeak'] : [y.src] });
 
   // 2. 互 (體互 first) and 變.
+  const showHuYong = c.huYong.num !== c.huTi.num || relations.huYong !== relations.huTi;
   out.push(stageText('huTi', c.huTi, relations.huTi));
-  if (c.huYong.num !== c.huTi.num || relations.huYong !== relations.huTi) out.push(stageText('huYong', c.huYong, relations.huYong));
+  if (showHuYong) out.push(stageText('huYong', c.huYong, relations.huYong));
   out.push(stageText('bian', c.bianTrigram, relations.bian));
 
   // 3. Beginning versus end: 用吉變凶 / 用凶變吉.
   const startGood = isGood(relations.yong);
   const endGood = isGood(relations.bian);
   if (startGood && !endGood) {
-    out.push({ id: 'arc', tone: 'caution', sources: ['yongVsBian'], zh: '用吉而變不吉：開頭順利，後段宜留意變化，不要鬆懈。', en: 'Good at 用 but not at 變: a smooth start, but watch for changes later and do not relax too early.' });
+    out.push({ id: 'arc', tone: 'caution', sources: ['yongVsBian'], term: { zh: '用吉變凶', en: '用吉變凶 · good start, harder end' }, zh: '開頭順利，但後段宜留意變化，不要太早鬆懈。', en: 'A smooth start, but watch for changes later and do not relax too early.' });
   } else if (!startGood && endGood) {
-    out.push({ id: 'arc', tone: 'good', sources: ['yongVsBian'], zh: '用不吉而變吉：開頭較難，後段漸入佳境。', en: 'Hard at 用 but good at 變: a difficult start that improves later.' });
+    out.push({ id: 'arc', tone: 'good', sources: ['yongVsBian'], term: { zh: '用凶變吉', en: '用凶變吉 · hard start, better end' }, zh: '開頭較難，後段漸入佳境。', en: 'A difficult start that gets better later.' });
   }
 
   // 4. Party counts among 互 and 變.
@@ -192,58 +209,72 @@ export function analyse(c: Cast, lunarMonth: number): Analysis {
   const tiParty = others.filter((t) => t.element === te).length;
   const yongParty = c.yong.element === te ? 0 : others.filter((t) => t.element === c.yong.element).length;
   if (tiParty >= 2 && tiParty > yongParty) {
-    out.push({ id: 'party', tone: 'good', sources: ['party'], zh: `互、變之中有 ${tiParty} 卦與體同屬${ELEMENT_ZH[te]}：體黨多，你這一方較有力。`, en: `${tiParty} of the 互 and 變 trigrams share 體's element (${ELEMENT_ZH[te]}): 體's side is stronger.` });
+    out.push({ id: 'party', tone: 'good', sources: ['party'], term: { zh: `體黨多（${tiParty} 卦同屬${ELEMENT_ZH[te]}）`, en: `體黨 · ${tiParty} trigrams share your element` }, zh: '站在你這一邊的力量較多，你較有底氣。', en: 'More of the hexagram stands on your side, so you have backing.' });
   } else if (yongParty >= 2 && yongParty > tiParty) {
-    out.push({ id: 'party', tone: 'caution', sources: ['party'], zh: `互、變之中有 ${yongParty} 卦與用同屬${ELEMENT_ZH[c.yong.element]}：用黨多，事情一方的力量較大。`, en: `${yongParty} of the 互 and 變 trigrams share 用's element (${ELEMENT_ZH[c.yong.element]}): the matter's side is stronger.` });
+    out.push({ id: 'party', tone: 'caution', sources: ['party'], term: { zh: `用黨多（${yongParty} 卦同屬${ELEMENT_ZH[c.yong.element]}）`, en: `用黨 · ${yongParty} trigrams share the matter's element` }, zh: '事情那一方的力量較大，不宜硬碰。', en: 'The forces on the matter\'s side are stronger, so avoid forcing it.' });
   }
 
   // 5. Tally of supporting and pressing trigrams.
   const all = [c.yong, c.huTi, c.huYong, c.bianTrigram];
   const sheng = all.filter((t) => relationToTi(te, t.element) === 'shengTi');
   const ke = all.filter((t) => relationToTi(te, t.element) === 'keTi');
+  const tallyTerm = { zh: `生體 ${sheng.length} · 克體 ${ke.length}`, en: `生體 ${sheng.length} · 克體 ${ke.length} (help · pressure)` };
+  let tally: Statement;
   if (!sheng.length && !ke.length) {
-    out.push({ id: 'tally', tone: 'neutral', sources: ['noShengKe'], zh: '卦中沒有生體或克體之卦：傳統上此時主要依本卦的卦辭來體會。', en: 'No trigram supports or presses on 體: tradition then reads mainly from the 本卦 text.' });
+    tally = { id: 'tally', tone: 'neutral', sources: ['noShengKe'], term: tallyTerm, zh: '卦中沒有明顯的助力或阻力，傳統上此時多參考下方的《周易》原文。', en: 'There is no clear help or pressure in the hexagram; tradition then leans on the Book of Changes text below.' };
   } else if (sheng.length !== ke.length) {
     const more = sheng.length > ke.length;
-    out.push({
-      id: 'tally', tone: more ? 'good' : 'caution', sources: ['tally'],
-      zh: `生體之卦 ${sheng.length}、克體之卦 ${ke.length}：整體${more ? '偏向有助' : '偏向有阻，宜多留餘地'}。`,
-      en: `${sheng.length} trigram(s) support 體 and ${ke.length} press on it: overall ${more ? 'leaning favourable' : 'leaning difficult, so leave yourself margin'}.`,
-    });
+    tally = { id: 'tally', tone: more ? 'good' : 'caution', sources: ['tally'], term: tallyTerm, zh: more ? '助力多於阻力，整體偏向順利。' : '阻力多於助力，整體偏難，宜多留餘地。', en: more ? 'Help outweighs pressure: leaning favourable overall.' : 'Pressure outweighs help: leaning difficult overall, so leave yourself margin.' };
   } else {
-    out.push({ id: 'tally', tone: 'neutral', sources: ['tally'], zh: `生體與克體之卦各 ${ke.length}：助力與阻力並存。`, en: `${ke.length} trigram(s) support 體 and as many press on it: help and resistance are mixed.` });
+    tally = { id: 'tally', tone: 'neutral', sources: ['tally'], term: tallyTerm, zh: '助力與阻力差不多，順逆參半。', en: 'Help and pressure are about even: a mixed picture.' };
   }
+  out.push(tally);
 
   // 6. Seasonal strength of 體.
   const tiStrong = isStrong(strengths.ti);
   const seasonSrc = SEASON_SOURCE[season];
   const sl = SEASON_LABEL[season];
-  out.push({
+  const seasonStmt: Statement = {
     id: 'season', tone: tiStrong ? 'good' : 'neutral', sources: [seasonSrc, 'wangShuai', 'tiShouldBeStrong'],
-    zh: `時值${sl.zh}，體卦${c.ti.name}屬${ELEMENT_ZH[te]}，為「${strengths.ti}」：${tiStrong ? '體得時令，較有底氣。' : '體不當令，宜蓄力而行。'}`,
-    en: `It is ${sl.en}; 體 ${c.ti.name} (${ELEMENT_ZH[te]}) is 「${strengths.ti}」 (${STRENGTH_EN[strengths.ti]}): ${tiStrong ? '體 is in season and has reserves.' : '體 is out of season, so build strength before pushing.'}`,
-  });
+    term: { zh: `${sl.zh} · 體${c.ti.name}${ELEMENT_ZH[te]}「${strengths.ti}」`, en: `${sl.en} · 體 ${c.ti.name}${ELEMENT_ZH[te]} 「${strengths.ti}」 ${STRENGTH_EN[strengths.ti]}` },
+    zh: tiStrong ? '以時令來看，你目前狀態不錯，較有底氣。' : '以時令來看，你目前不在最有力的時候，宜先蓄力再行動。',
+    en: tiStrong ? 'For the season, you are in good form and have reserves.' : 'For the season, you are not at your strongest, so build up before pushing.',
+  };
+  out.push(seasonStmt);
   if (tiStrong && sheng.length) {
-    out.push({ id: 'season-combo', tone: 'good', sources: ['strongWithSheng'], zh: '體得時令而又有生體之卦：傳統視為吉。', en: '體 is in season and also supported: tradition reads this as favourable.' });
+    out.push({ id: 'season-combo', tone: 'good', sources: ['strongWithSheng'], term: { zh: '體旺逢生', en: '體旺逢生 · strong and supported' }, zh: '你狀態好，又有助力，傳統上視為吉。', en: 'You are in good form and also supported; tradition reads this as favourable.' });
   } else if (tiStrong && ke.length) {
-    out.push({ id: 'season-combo', tone: 'neutral', sources: ['strongResists'], zh: '體得時令，雖有克體之卦，傳統認為影響不大。', en: '體 is in season, so tradition holds the pressing trigrams do little harm.' });
+    out.push({ id: 'season-combo', tone: 'neutral', sources: ['strongResists'], term: { zh: '體旺', en: '體旺 · in season' }, zh: '你狀態好，即使有壓力，傳統上認為影響不大。', en: 'You are in good form, so tradition holds the pressure does little harm.' });
   } else if (!tiStrong && sheng.length) {
-    out.push({ id: 'season-combo', tone: 'neutral', sources: ['weakWithSheng'], zh: '體雖不當令，但有生體之卦相助，弱勢可得緩解。', en: '體 is out of season, but a supporting trigram eases the weakness.' });
+    out.push({ id: 'season-combo', tone: 'neutral', sources: ['weakWithSheng'], term: { zh: '體衰有生', en: '體衰有生 · weak but supported' }, zh: '你狀態一般，但有助力，可以緩解。', en: 'You are not at your strongest, but help is there to ease it.' });
   } else if (!tiStrong && ke.length) {
-    out.push({ id: 'season-combo', tone: 'caution', sources: ['weakWithKe'], zh: '體不當令而又有克體之卦：傳統視為壓力加重的時候，宜放慢腳步、穩妥為先。', en: '體 is out of season and also pressed: tradition reads extra strain, so slow down and put safety first.' });
+    out.push({ id: 'season-combo', tone: 'caution', sources: ['weakWithKe'], term: { zh: '體衰逢克', en: '體衰逢克 · weak and pressed' }, zh: '你狀態一般又有壓力，宜放慢腳步、穩妥為先。', en: 'You are not at your strongest and under pressure: slow down and put safety first.' });
   }
   for (const t of uniq(ke)) {
-    if (isStrong(st(t))) out.push({ id: `ke-strong-${t.num}`, tone: 'caution', sources: ['helpersStrong'], zh: `克體之${t.name}正值「${st(t)}」，壓力較明顯。`, en: `The pressing trigram ${t.name} is 「${st(t)}」 (${STRENGTH_EN[st(t)]}), so its pressure is marked.` });
+    if (isStrong(st(t))) out.push({ id: `ke-strong-${t.num}`, tone: 'caution', sources: ['helpersStrong'], term: { zh: `克體之${t.name}「${st(t)}」`, en: `pressing ${t.name} 「${st(t)}」 ${STRENGTH_EN[st(t)]}` }, zh: '帶來壓力的一方正當旺，壓力較明顯。', en: 'The pressing side is in season, so its pressure is marked.' });
   }
   for (const t of uniq(sheng)) {
-    if (isStrong(st(t))) out.push({ id: `sheng-strong-${t.num}`, tone: 'good', sources: ['helpersStrong'], zh: `生體之${t.name}正值「${st(t)}」，助力較足。`, en: `The supporting trigram ${t.name} is 「${st(t)}」 (${STRENGTH_EN[st(t)]}), so its help is strong.` });
+    if (isStrong(st(t))) out.push({ id: `sheng-strong-${t.num}`, tone: 'good', sources: ['helpersStrong'], term: { zh: `生體之${t.name}「${st(t)}」`, en: `helping ${t.name} 「${st(t)}」 ${STRENGTH_EN[st(t)]}` }, zh: '帶來助力的一方正當旺，助力較足。', en: 'The helping side is in season, so its help is strong.' });
   }
 
   // 7. What the supporting / pressing trigrams traditionally signify.
-  for (const t of uniq(sheng)) out.push({ id: `sheng-${t.num}`, tone: 'good', sources: [`sheng${t.num}` as SourceId], ...SHENG_IMAGE[t.num] });
-  for (const t of uniq(ke)) out.push({ id: `ke-${t.num}`, tone: 'caution', sources: [`ke${t.num}` as SourceId], ...KE_IMAGE[t.num] });
+  for (const t of uniq(sheng)) out.push({ id: `sheng-${t.num}`, tone: 'good', sources: [`sheng${t.num}` as SourceId], term: { zh: `${t.name}生體`, en: `${t.name}生體 · ${t.name} supports you` }, ...SHENG_IMAGE[t.num] });
+  for (const t of uniq(ke)) out.push({ id: `ke-${t.num}`, tone: 'caution', sources: [`ke${t.num}` as SourceId], term: { zh: `${t.name}克體`, en: `${t.name}克體 · ${t.name} presses on you` }, ...KE_IMAGE[t.num] });
 
-  return { season, relations, strengths, shengCount: sheng.length, keCount: ke.length, statements: out };
+  // ---- Summary: start, middle, end, overall, in plain words. ----
+  const summary: Statement[] = [];
+  summary.push({ id: 'sum-start', tone: toneOf(relations.yong), zh: `開始時，${PHRASE[relations.yong].zh}。`, en: `At the start, ${PHRASE[relations.yong].en}.`, sources: [y.src, 'tiyongDef'] });
+  const midDiffers = showHuYong && isGood(relations.huYong) !== isGood(relations.huTi);
+  summary.push({
+    id: 'sum-middle', tone: midDiffers ? 'neutral' : toneOf(relations.huTi),
+    zh: `過程中，${PHRASE[relations.huTi].zh}${midDiffers ? `；但同時${PHRASE[relations.huYong].zh}` : ''}。`,
+    en: `Along the way, ${PHRASE[relations.huTi].en}${midDiffers ? `, though ${PHRASE[relations.huYong].en}` : ''}.`,
+    sources: ['stages', 'huTiFirst'],
+  });
+  summary.push({ id: 'sum-end', tone: toneOf(relations.bian), zh: `到最後，${PHRASE[relations.bian].zh}。`, en: `By the end, ${PHRASE[relations.bian].en}.`, sources: ['stages', relations.bian === 'keTi' ? 'bianKeTi' : isGood(relations.bian) ? 'bianShengTi' : 'order'] });
+  summary.push({ id: 'sum-overall', tone: tally.tone, zh: `${tally.zh}${seasonStmt.zh}`, en: `${tally.en} ${seasonStmt.en}`, sources: [...tally.sources, ...seasonStmt.sources] });
+
+  return { season, relations, strengths, shengCount: sheng.length, keCount: ke.length, summary, statements: out };
 }
 
 const uniq = (ts: Trigram[]) => ts.filter((t, i) => ts.findIndex((u) => u.num === t.num) === i);

@@ -30,6 +30,18 @@ export function hexSvg(d: HexDrawing, tiLabel: string, yongLabel: string): strin
     tags = `<text class="tag ${up ? 'ti' : 'yong'}" x="${W + 8}" y="${y(4) + LH}">${up ? tiLabel : yongLabel}</text>`
       + `<text class="tag ${up ? 'yong' : 'ti'}" x="${W + 8}" y="${y(1) + LH}">${up ? yongLabel : tiLabel}</text>`;
   }
-  const width = d.tiPosition ? W + 34 : W;
+  const tagW = Math.max(tiLabel.length, yongLabel.length) > 2 ? 60 : 34;
+  const width = d.tiPosition ? W + tagW : W;
   return `<svg class="hex" viewBox="0 0 ${width} ${H}" width="${width}" height="${H}" role="img" aria-label="${d.label}">${parts.join('')}${tags}</svg>`;
+}
+
+/** A single trigram, lines bottom → top. */
+export function trigramSvg(lines: readonly Line[], label: string): string {
+  const W = 48, LH = 7, GAP = 5;
+  const y = (i: number) => 2 + (2 - i) * (LH + GAP);
+  const parts = lines.map((l, i) => l
+    ? `<rect class="ln" x="0" y="${y(i)}" width="${W}" height="${LH}" rx="1.5"/>`
+    : `<rect class="ln" x="0" y="${y(i)}" width="${W / 2 - 4}" height="${LH}" rx="1.5"/><rect class="ln" x="${W / 2 + 4}" y="${y(i)}" width="${W / 2 - 4}" height="${LH}" rx="1.5"/>`);
+  const H = y(0) + LH + 2;
+  return `<svg class="hex tri" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${label}">${parts.join('')}</svg>`;
 }

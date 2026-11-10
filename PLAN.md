@@ -61,6 +61,8 @@ The exact example data is checked against the downloaded source before it goes i
 - **Year:** the lunar year (it changes at 正月初一, not at 立春).
 - **Leap months** count as their ordinary month number. The book does not say.
 - **23:00–24:00** is 子時 of the next lunar day.
+- **One number:** follows 物數占例 (hour alone is the lower trigram). 聲音占例 instead says
+  「加時數配作下卦」 (count + hour); the Learn page mentions the difference.
 - **Entered numbers:** first → upper, second → lower; the moving line is their sum, plus the hour number
   when the 「取爻當以時加之」 box is ticked (default on). The book's own examples do it both ways
   (今日動靜 omits the hour; 物數 / 端法 examples add it).
@@ -75,11 +77,16 @@ The exact example data is checked against the downloaded source before it goes i
   西林寺 ×2, 老人, 少年, 牛, 雞, 枯枝), plus the 觀梅 / 牡丹 time sums.
 - [x] Phase 2: UI with citations, limits note, history, 繁/简/EN.
 - [x] Phase 3: Pages workflow, launch.json entries `meihua-yishu` (5179) / `meihua-yishu-prod` (4179).
-- [ ] The user creates the GitHub repo, then commit and push.
+- [x] Live on GitHub Pages (2026-11-10).
+- [x] Split into four pages (2026-11-10): 起卦 (index), 學習 (learn.html), 方法與出處 (about.html),
+  設定 (settings.html), and 紀錄 (history.html) for past questions.
+- [x] One-number casting (卷一「物數占例」: number → upper, hour → lower) and an optional extra number
+  for the time method (卷二「起卦加數例」, 3 more worked examples in the tests).
+- [x] Settings: season by lunar month or solar-term month, 子時 day change at 23:00 or midnight,
+  default for adding the hour with two numbers, opt-in history.
 
 ## Ideas for later
 
-- 節氣 month as a setting for seasonal strength.
 - Timing of the response (卷三「占卜克應之訣」, 卷一 老人占 「行則應速」), carefully framed.
 - English translation of the 周易 text (Legge 1882 is public domain; it would need verifying like the rest).
 - 外應 input (what you saw or heard), per 卷二「三要」「十應」.

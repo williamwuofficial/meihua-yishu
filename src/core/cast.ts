@@ -79,17 +79,22 @@ export interface LunarMoment {
   hourBranch: Branch;
   /** Labels for display, e.g. 丙午年. */
   yearGanZhi: string;
+  /** Month branch by solar term (月建, 節氣), for the optional seasonal basis. */
+  monthBranchByTerm: Branch;
+  /** True when 23:00–24:00 was counted as the next lunar day. */
+  shifted: boolean;
   solar: { y: number; m: number; d: number; h: number; mi: number };
 }
 
 /**
  * Lunar moment for a local civil date-time.
- * From 23:00 the hour is 子 and the lunar day is counted as the next day
- * (the 子時 begins the day); the UI says so.
+ * From 23:00 the hour is 子. By default the lunar day is then counted as the next day
+ * (the 子時 begins the day); `ziNextDay: false` keeps the calendar day until midnight.
  */
-export function lunarMoment(y: number, m: number, d: number, h: number, mi: number): LunarMoment {
-  let s = Solar.fromYmdHms(y, m, d, h, mi, 0);
-  if (h >= 23) s = s.next(1);
+export function lunarMoment(y: number, m: number, d: number, h: number, mi: number, ziNextDay = true): LunarMoment {
+  const exact = Solar.fromYmdHms(y, m, d, h, mi, 0);
+  const shifted = ziNextDay && h >= 23;
+  const s = shifted ? exact.next(1) : exact;
   const lunar = s.getLunar();
   const month = lunar.getMonth();
   return {
@@ -99,15 +104,18 @@ export function lunarMoment(y: number, m: number, d: number, h: number, mi: numb
     day: lunar.getDay(),
     hourBranch: BRANCHES[Math.floor(((h + 1) % 24) / 2)],
     yearGanZhi: lunar.getYearInGanZhi(),
+    monthBranchByTerm: exact.getLunar().getMonthZhiExact() as Branch,
+    shifted,
     solar: { y, m, d, h, mi },
   };
 }
 
 /**
  * 卷一「年月日時起例」: 年+月+日 → upper; 年+月+日+時 → lower; the same total → moving line.
+ * 卷二「起卦加數例」 adds an extra number (there, a surname's strokes) to every sum.
  */
-export function timeNumbers(t: Pick<LunarMoment, 'yearBranch' | 'month' | 'day' | 'hourBranch'>): CastNumbers {
-  const upper = branchNumber(t.yearBranch) + t.month + t.day;
+export function timeNumbers(t: Pick<LunarMoment, 'yearBranch' | 'month' | 'day' | 'hourBranch'>, extra = 0): CastNumbers {
+  const upper = branchNumber(t.yearBranch) + t.month + t.day + extra;
   const lower = upper + branchNumber(t.hourBranch);
   return { upper, lower, line: lower };
 }
@@ -119,4 +127,13 @@ export function timeNumbers(t: Pick<LunarMoment, 'yearBranch' | 'month' | 'day' 
  */
 export function enteredNumbers(a: number, b: number, hourBranch?: Branch): CastNumbers {
   return { upper: a, lower: b, line: a + b + (hourBranch ? branchNumber(hourBranch) : 0) };
+}
+
+/**
+ * One number. 卷一「物數占例」: the number → upper, the hour number → lower,
+ * number + hour → moving line.
+ */
+export function singleNumber(n: number, hourBranch: Branch): CastNumbers {
+  const h = branchNumber(hourBranch);
+  return { upper: n, lower: h, line: n + h };
 }

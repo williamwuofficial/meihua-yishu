@@ -12,9 +12,14 @@ Live: https://williamwuofficial.github.io/meihua-yishu/ · Sister tool: [紫微�
 
 ## What it does
 
+- **Two modes:** Quick (pick a common question; cast at the current time; one-line answer from the
+  book's topic rule, 人事占 or 天時占) and Advanced (type your own question; all casting options; full reading).
 - **Casting:** by the time of asking (年月日時起例: lunar year branch + month + day → upper trigram;
-  + hour branch → lower trigram; the same total → moving line), or by two numbers you choose (物數占例),
-  with an option to add the hour number to the moving line.
+  + hour branch → lower trigram; the same total → moving line), optionally with an extra number added
+  (起卦加數例); by one number (物數占例: number → upper, hour → lower); or by two numbers (丈尺占 /
+  尺寸占), with an option to add the hour number to the moving line.
+- **Pages:** 起卦 (cast), 紀錄 (history: past questions, search, reopen, delete), 學習 (learn), 須知 (about: limits, method and sources), 設定 (settings: season by lunar
+  or solar-term month, when the day changes at 子時, the hour default, history).
 - **Hexagrams:** 本卦, 互卦 (lines 2–4 and 3–5, with 「乾坤無互，互其變卦」) and 變卦. The trigram
   without the moving line is 體.
 - **Analysis:** 生剋 between 體 and 用, the 體互 and 用互, and the 變 trigram; 體黨 and 用黨 counts;

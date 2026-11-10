@@ -1,7 +1,7 @@
 // Worked examples from 《梅花易數》卷一 (Wikisource text cached in .cache/sources).
 // Each case lists the numbers the book uses and the hexagrams it names.
 import { describe, expect, it } from 'vitest';
-import { castFromNumbers, enteredNumbers, lunarMoment, mod6, mod8, timeNumbers } from '../src/core/cast';
+import { castFromNumbers, enteredNumbers, lunarMoment, mod6, mod8, singleNumber, timeNumbers } from '../src/core/cast';
 import { HEXAGRAMS, hexagram } from '../src/core/hexagram';
 import { TRIGRAMS } from '../src/core/trigrams';
 
@@ -87,6 +87,31 @@ describe('worked examples from 《梅花易數》卷一', () => {
     expect(timeNumbers({ yearBranch: '巳', month: 3, day: 16, hourBranch: '卯' })).toEqual({ upper: 25, lower: 29, line: 29 });
   });
 
+  // 卷二「起卦加數例」: 寅年十二月初一日午時, three families add their surname's strokes.
+  // 「若寅年三數、十二與一，共十六，加王姓四畫…得豐變震，互見兌、巽」 (the text says 「余三為初爻」 but
+  // 27 ÷ 6 leaves 3, the third line, and 豐 → 震 only works with the third line).
+  // 「田姓加以田字六畫，得水風井，變升，互見離、兌」「韓姓加入二十一畫之數，得益變中孚，互見艮、坤」
+  for (const [surname, strokes, ben, bian, hu] of [
+    ['王', 4, '雷火豐', '震為雷', ['兌', '巽']],
+    ['田', 6, '水風井', '地風升', ['離', '兌']],
+    ['韓', 21, '風雷益', '風澤中孚', ['艮', '坤']],
+  ] as const) {
+    it(`起卦加數例: ${surname} + ${strokes}`, () => {
+      const r = castFromNumbers(timeNumbers({ yearBranch: '寅', month: 12, day: 1, hourBranch: '午' }, strokes));
+      expect(r.ben.fullName).toBe(ben);
+      expect(r.bian.fullName).toBe(bian);
+      expect([r.hu.upper.name, r.hu.lower.name].sort()).toEqual([...hu].sort());
+    });
+  }
+
+  it('one number (物數占例): the number is the upper trigram, the hour the lower', () => {
+    // 7 at 午時: upper 7 艮, lower 午7 艮, line 14 → 2.
+    expect(singleNumber(7, '午')).toEqual({ upper: 7, lower: 7, line: 14 });
+    const r = castFromNumbers(singleNumber(7, '午'));
+    expect(r.ben.fullName).toBe('艮為山');
+    expect(r.moving).toBe(2);
+  });
+
   it('entered numbers add the hour to the moving line only when asked', () => {
     expect(enteredNumbers(1, 5, '酉')).toEqual({ upper: 1, lower: 5, line: 16 });
     expect(enteredNumbers(8, 5)).toEqual({ upper: 8, lower: 5, line: 13 });
@@ -122,6 +147,14 @@ describe('lunar moment', () => {
     expect(m).toMatchObject({ day: 2, hourBranch: '子' });
     expect(lunarMoment(2024, 2, 11, 0, 30)).toMatchObject({ day: 2, hourBranch: '子' });
     expect(lunarMoment(2024, 2, 11, 1, 0)).toMatchObject({ hourBranch: '丑' });
+  });
+  it('can keep the calendar day until midnight', () => {
+    expect(lunarMoment(2024, 2, 10, 23, 10, false)).toMatchObject({ day: 1, hourBranch: '子', shifted: false });
+  });
+  it('gives the solar-term month branch', () => {
+    // 2024-02-03 is before 立春 (02-04), so still 丑月; 02-05 is 寅月.
+    expect(lunarMoment(2024, 2, 3, 12, 0).monthBranchByTerm).toBe('丑');
+    expect(lunarMoment(2024, 2, 5, 12, 0).monthBranchByTerm).toBe('寅');
   });
   it('a leap month counts as its ordinary number', () => {
     // 2023 had a leap 2nd month (閏二月), 2023-04-01 falls in it.
