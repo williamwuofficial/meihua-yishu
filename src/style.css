@@ -1,0 +1,119 @@
+:root {
+  --bg: #faf7f4;
+  --surface: #ffffff;
+  --surface-2: #f6eff0;
+  --text: #211a1c;
+  --muted: #655a5d;
+  --border: #e6dcde;
+  --accent: #9b2d4a;
+  --accent-soft: #f8e7ec;
+  --ink: #2a2224;
+  --moving: #c0392b;
+  --good: #1f7a45;
+  --good-bg: #e8f4ec;
+  --caution: #a2551a;
+  --caution-bg: #fbefe3;
+  --neutral: #5d6470;
+  --neutral-bg: #eef0f3;
+  --warn-bg: #fff6e0;
+  --warn-border: #e2bd5a;
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  line-height: 1.6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161214;
+    --surface: #1f1a1c;
+    --surface-2: #2a2225;
+    --text: #efe8ea;
+    --muted: #b0a4a8;
+    --border: #3a3033;
+    --accent: #f08aa6;
+    --accent-soft: #3a222b;
+    --ink: #e9dfe2;
+    --moving: #ff7a6b;
+    --good: #6fd39a;
+    --good-bg: #1c2e23;
+    --caution: #f0a868;
+    --caution-bg: #33261a;
+    --neutral: #b5bcc8;
+    --neutral-bg: #262a30;
+    --warn-bg: #2e2614;
+    --warn-border: #8a6d2a;
+  }
+}
+html[data-script='zh-CN'] { font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+a { color: var(--accent); }
+.site-header, main, .site-footer { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+.site-header { padding-top: 28px; position: relative; }
+h1 { margin: 0; font-size: 1.7rem; color: var(--accent); letter-spacing: 0.02em; }
+h2 { margin: 0 0 10px; font-size: 1.15rem; }
+h3 { font-size: 1rem; margin: 18px 0 8px; }
+h4 { margin: 0; font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.tagline, .hint, .site-footer { color: var(--muted); }
+.tagline { margin: 6px 0 0; }
+.hint { font-size: 0.85rem; margin: 4px 0; display: block; }
+.langs { position: absolute; right: 16px; top: 16px; display: flex; gap: 4px; }
+.langs button { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 2px 10px; cursor: pointer; font: inherit; font-size: 0.85rem; }
+.langs button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin: 18px 0; }
+.limits { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 12px; padding: 12px 16px; margin: 18px 0; }
+.limits p { margin: 4px 0 0; font-size: 0.9rem; }
+.field { display: flex; flex-direction: column; gap: 4px; margin: 0 0 12px; border: 0; padding: 0; min-width: 0; }
+.label { font-weight: 600; font-size: 0.9rem; }
+textarea, input[type='number'], input[type='datetime-local'] { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
+textarea { resize: vertical; }
+.row { display: flex; gap: 16px; flex-wrap: wrap; }
+.row > .field { flex: 1 1 220px; }
+.inline { display: flex; gap: 8px; align-items: center; }
+.seg { display: flex; gap: 16px; flex-wrap: wrap; }
+.seg label, .check { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.check { margin: 6px 0; font-size: 0.9rem; }
+button.primary { font: inherit; font-weight: 600; background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 28px; cursor: pointer; margin-top: 8px; font-size: 1.05rem; }
+button.link { font: inherit; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0 4px; text-decoration: underline; font-size: 0.9rem; }
+#hist-clear { font: inherit; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px 12px; cursor: pointer; }
+.error { color: var(--moving); font-weight: 600; }
+.asked { font-size: 1.15rem; text-align: center; margin: 24px 0 0; }
+.hexes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+@media (max-width: 640px) { .hexes { grid-template-columns: 1fr; } }
+.hexcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+.hexcard.ben { border-color: var(--accent); }
+.hexcard h3 { margin: 0 0 8px; }
+.hexcard h3 small { color: var(--muted); font-weight: 400; }
+.hexname { font-size: 1.15rem; font-weight: 600; margin: 6px 0 2px; }
+.tris { font-size: 0.85rem; color: var(--muted); margin: 0; }
+.hex { max-width: 100%; height: auto; }
+.hex .ln { fill: var(--ink); }
+.hex .ln.moving { fill: var(--moving); }
+.hex .dot { fill: var(--moving); }
+.hex .tag { font-size: 15px; font-weight: 700; }
+.hex .tag.ti { fill: var(--accent); }
+.hex .tag.yong { fill: var(--muted); }
+.stmts { list-style: none; padding: 0; margin: 0; }
+.stmt { border-left: 4px solid var(--neutral); background: var(--neutral-bg); border-radius: 0 8px 8px 0; padding: 8px 12px; margin: 8px 0; }
+.stmt p { margin: 0; }
+.stmt.tone-good { border-color: var(--good); background: var(--good-bg); }
+.stmt.tone-caution { border-color: var(--caution); background: var(--caution-bg); }
+.cite { font-size: 0.8rem; color: var(--muted); margin: 4px 0 0; }
+.cite summary { cursor: pointer; }
+.cite blockquote { margin: 4px 0; padding: 4px 10px; border-left: 3px solid var(--border); color: var(--text); font-size: 0.9rem; }
+.yi { margin: 8px 0; }
+.yi p { margin: 2px 0 0; font-size: 1.02rem; }
+.more summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); }
+.st-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.st-table th, .st-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+.rel { border-radius: 999px; padding: 0 8px; font-size: 0.8rem; background: var(--neutral-bg); }
+.rel-shengTi, .rel-tiKe, .rel-biHe { background: var(--good-bg); color: var(--good); }
+.rel-keTi { background: var(--caution-bg); color: var(--caution); }
+.st { font-weight: 700; }
+.st-旺, .st-相 { color: var(--good); }
+.st-囚, .st-死 { color: var(--caution); }
+.working { padding-left: 20px; }
+.hist { padding-left: 18px; }
+.hist li { margin: 4px 0; }
+.hq { font-weight: 600; }
+.methods p { font-size: 0.92rem; }
+.site-footer { font-size: 0.8rem; padding-bottom: 32px; }
+@media (max-width: 520px) { .langs { position: static; margin-bottom: 8px; } }

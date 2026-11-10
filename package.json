@@ -1,0 +1,29 @@
+{
+  "name": "meihua-yishu",
+  "private": true,
+  "version": "0.1.0",
+  "description": "梅花易數 (Plum Blossom numerology) question caster with cited 體用 analysis",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "fetch-sources": "node scripts/fetch-sources.mjs",
+    "build-texts": "node scripts/build-texts.mjs",
+    "verify-sources": "node scripts/verify-sources.mjs",
+    "t2s": "node scripts/build-t2s.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "lunar-typescript": "1.8.6"
+  },
+  "devDependencies": {
+    "opencc-js": "1.4.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
